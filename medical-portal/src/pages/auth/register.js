@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 const Register = () => {
+    const router = useRouter();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -30,6 +33,7 @@ const Register = () => {
             const data = await response.json();
             if (response.ok) {
                 setMessage('Registration successful! You can now log in.');
+                router.push(data.redirectTo); // Redirect to quiz page
             } else {
                 setMessage(data.error || 'Registration failed.');
             }
@@ -97,6 +101,24 @@ const Register = () => {
                     {loading ? 'Registering...' : 'Register'}
                 </button>
             </form>
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <div className="p-6 bg-white rounded shadow-md w-96">
+                    <h1 className="text-2xl font-bold mb-4">Register</h1>
+                    <button
+                        onClick={() => signIn('google')}
+                        className="w-full p-2 mb-4 bg-blue-500 text-white rounded"
+                    >
+                        Register with Google
+                    </button>
+                    <button
+                        onClick={() => signIn('azure-ad')}
+                        className="w-full p-2 mb-4 bg-blue-500 text-white rounded"
+                    >
+                        Register with Microsoft
+                    </button>
+                    {/* Add buttons for other providers */}
+                </div>
+            </div>
         </div>
     );
 };

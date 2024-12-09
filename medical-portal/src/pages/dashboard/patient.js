@@ -1,28 +1,25 @@
 import { useEffect, useState } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import cookies from 'js-cookie';
 
 const PatientDashboard = () => {
+    const { data: session, status } = useSession(); // Retrieve session
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [error, setError] = useState('');
 
-    const handleLogout = () => {
-        cookies.remove('token'); // Clear token
-        router.push('/auth/logout'); // Redirect to logout logic
-    };
-
     useEffect(() => {
+        console.log('Session:', session);
         const fetchData = async () => {
             try {
-                const token = cookies.get('token');
-                if (!token) {
-                    throw new Error('Unauthorized');
-                }
+                // Check if session is loaded
+                if (status === 'loading') return;
+
+
 
                 const response = await fetch('/api/dashboard/patient', {
                     headers: {
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${session.user.email}`, // Pass session email
                     },
                 });
 
@@ -35,19 +32,27 @@ const PatientDashboard = () => {
             } catch (err) {
                 console.error('Authorization Error:', err);
                 setError('You are not authorized to access this page.');
-                router.push('/auth/login');
+                router.push('/auth/login'); // Redirect to login if unauthorized
             }
         };
 
         fetchData();
-    }, [router]);
+    }, [session, status, router]);
+
+    const handleLogout = () => {
+        signOut({ callbackUrl: '/auth/login' }); // Sign out and redirect
+    };
+
+    if (status === 'loading') {
+        return <p>Loading session...</p>;
+    }
 
     if (error) {
         return <p>{error}</p>;
     }
 
     if (!user) {
-        return <p>Loading...</p>;
+        return <p>Loading user data...</p>;
     }
 
     return (

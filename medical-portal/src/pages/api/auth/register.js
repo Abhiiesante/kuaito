@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import User from '../../../models/User';
-
+import { getServerSession } from 'next-auth/next';
+import NextAuth from '../auth/[...nextauth]'; // Import NextAuth configuration
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -16,7 +17,9 @@ export default async function handler(req, res) {
 
     try {
         if (!mongoose.connection.readyState) {
-            await mongoose.connect("mongodb+srv://Abhiram:Christmastree03@cluster0.8pxdr.mongodb.net/medical-portal?retryWrites=true&w=majority");
+            await mongoose.connect(
+                'mongodb+srv://Abhiram:Christmastree03@cluster0.8pxdr.mongodb.net/medical-portal?retryWrites=true&w=majority'
+            );
         }
 
         const existingUser = await User.findOne({ email });
@@ -30,10 +33,14 @@ export default async function handler(req, res) {
         const newUser = new User({ name, email, password: hashedPassword, role });
         await newUser.save();
 
-        res.status(201).json({ message: 'User registered successfully' });
+        // Fetch current session
+        const session = await getServerSession(req, res, NextAuth);
+
+        // Update session with user data
+        session.user = { email: newUser.email, role: newUser.role };
+        res.status(201).json({ message: 'User registered successfully', redirectTo: '/quiz/patient-details' });
     } catch (error) {
         console.error('Registration Error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 }
-

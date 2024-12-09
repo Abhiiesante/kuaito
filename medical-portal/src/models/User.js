@@ -5,8 +5,9 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['patient', 'doctor'], required: true },
+    provider: { type: String }, // e.g., 'google', 'azure-ad'
+    accessToken: { type: String },
+    refreshToken: { type: String },
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);
-
-export default User;
+export default mongoose.models.User || mongoose.model('User', userSchema);
